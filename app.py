@@ -4,13 +4,12 @@ import streamlit as st
 from dotenv import load_dotenv
 from haystack import Pipeline
 from haystack.utils import Document
+from haystack.nodes import SentenceTransformersTextEmbedder, DenseRetriever, OpenAITextEmbedder
 from haystack.document_stores import InMemoryDocumentStore
-from haystack.nodes import EmbeddingRetriever
-from haystack.nodes import DensePassageRetriever
 
 warnings.filterwarnings("ignore")
-load_dotenv()
 
+load_dotenv()
 st.set_page_config(page_title="Recherche IA dans vos documents")
 st.title("📄 Recherche intelligente avec Haystack")
 
@@ -18,31 +17,22 @@ uploaded_files = st.file_uploader("Déposez vos fichiers ici", type=["txt", "pdf
 
 if uploaded_files:
     documents = []
-
     for file in uploaded_files:
         content = file.read().decode("utf-8", errors="ignore")
         documents.append(Document(content=content, meta={"name": file.name, "path": "upload"}))
-
     st.success("✅ Fichiers bien reçus !")
-
     question = st.text_input("Que cherchez-vous ?")
-
     if question:
         with st.spinner("Recherche en cours..."):
             document_store = InMemoryDocumentStore()
             document_store.write_documents(documents)
-
             embedder = OpenAITextEmbedder()
-            retriever = InMemoryEmbeddingRetriever(document_store=document_store)
-
+            retriever = DenseRetriever(document_store=document_store, embedding_model=embedder)
             pipeline = Pipeline()
-            pipeline.add_component("query_embedder", embedder)
-            pipeline.add_component("retriever", retriever)
-            pipeline.connect("query_embedder.embedding", "retriever.query_embedding")
-
-            results = pipeline.run({"query_embedder": {"text": question}})
-            docs = results["retriever"]["documents"]
-
+            pipeline.add_node(embedder, name="query_embedder", inputs=["query"])
+            pipeline.add_node(retriever, name="retriever", inputs=["query_embedder"])
+            results = pipeline.run(query=question)
+            docs = results["documents"]
             if docs:
                 top_doc = docs[0]
                 st.markdown("### 📌 Résultat")
