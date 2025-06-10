@@ -1,7 +1,7 @@
 from haystack import Pipeline
-from haystack.components.embedders import OpenAITextEmbedder
-from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
-from haystack.document_stores.in_memory import InMemoryDocumentStore
+from haystack.document_stores import InMemoryDocumentStore
+from haystack.nodes import EmbeddingRetriever
+from haystack.nodes import DensePassageRetriever
 from haystack.utils import Document
 
 def create_pipeline(documents):
