@@ -4,7 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from haystack import Pipeline
 from haystack.schema import Document
-from haystack.nodes import SentenceTransformersTextEmbedder, DenseRetriever, OpenAITextEmbedder
+from haystack.nodes import EmbeddingRetriever, OpenAITextEmbedder
 from haystack.document_stores import InMemoryDocumentStore
 
 warnings.filterwarnings("ignore")
@@ -32,7 +32,7 @@ if uploaded_files:
             document_store.write_documents(documents)
 
             embedder = OpenAITextEmbedder()
-            retriever = DenseRetriever(document_store=document_store, embedding_model=embedder)
+            retriever = EmbeddingRetriever(document_store=document_store, embedding_model=embedder)
 
             pipeline = Pipeline()
             pipeline.add_node(embedder, name="query_embedder", inputs=["query"])
